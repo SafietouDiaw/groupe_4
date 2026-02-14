@@ -20,6 +20,10 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         if_key_exists: replace
         known_hosts: 'un-used' 
+    - name: Test SSH connection
+      run: |
+        echo "Host: ${{ secrets.EC2_HOST }}"
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo Connected!"
 
     - name: Copy files to Server
       run: |
