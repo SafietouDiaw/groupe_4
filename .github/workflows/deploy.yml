@@ -1,0 +1,53 @@
+name: CI/CD Pipeline Groupe 4
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        # La clé reste un SECRET pour la sécurité
+        key: ${{ secrets.EC2_SSH_KEY }}
+        if_key_exists: replace
+        known_hosts: 'un-used' 
+
+    - name: Copy files to Server
+      run: |
+        # Utilisation de vars pour USER et HOST
+        scp -o StrictHostKeyChecking=no -r . ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/groupe_4
+
+    - name: Deploy and Start Flask
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "
+          cd /home/${{ vars.EC2_USER }}/groupe_4
+          
+          echo 'Installation des paquets systeme...'
+          sudo apt-get update -y || sudo yum update -y
+          sudo apt-get install -y python3-venv python3-pip || sudo yum install -y python3-pip
+
+          echo 'Configuration de l environnement virtuel...'
+          python3 -m venv venv
+          source venv/bin/activate
+          
+          echo 'Installation des dependances...'
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+          echo 'Redemarrage de l application...'
+          # Utilisation de vars pour APP_PORT
+          sudo fuser -k ${{ vars.APP_PORT }}/tcp || true
+          
+          nohup venv/bin/python server.py > flask.log 2>&1 &
+          
+          echo 'Deploiement termine avec succes !'
+        "
