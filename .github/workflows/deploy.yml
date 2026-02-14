@@ -24,12 +24,12 @@ jobs:
     - name: Copy files to Server
       run: |
         # Utilisation de vars pour USER et HOST
-        scp -o StrictHostKeyChecking=no -r . ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }}:/home/${{ vars.EC2_USER }}/groupe_4
+        scp -o StrictHostKeyChecking=no -r . ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/groupe_4
 
     - name: Deploy and Start Flask
       run: |
         ssh -o StrictHostKeyChecking=no ${{ vars.EC2_USER }}@${{ vars.EC2_HOST }} "
-          cd /home/${{ vars.EC2_USER }}/groupe_4
+          cd /home/${{ secrets.EC2_USER }}/groupe_4
           
           echo 'Installation des paquets systeme...'
           sudo apt-get update -y || sudo yum update -y
